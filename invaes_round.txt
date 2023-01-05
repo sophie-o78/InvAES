@@ -1,0 +1,115 @@
+
+entity invaes_round is
+    port (
+	cipher_i : in bit128;
+	enable_mixcolumns_i : in std_logic;
+        clk_i : in std_logic;
+        key_i : in bit128;
+	cipherkey_i : in bit128;
+        enable_Roundcomputing_i : in std_logic;
+        reset_i : in std_logic;
+        data_o : out bit128
+    );
+end invaes_round;
+
+
+architecture invaes_round_arch of invaes_round is
+
+    component addroundkey is
+        port (
+            data_i : in type_state;--4x4 matrix
+            key_i : in type_state;
+            data_o : out type_state
+        );
+    end component;
+
+    component subbyte is
+        port (
+            data_i : in type_state;
+            data_o : out type_state
+        );
+    end component;
+
+    component shiftrows is
+        port (
+            data_i : in type_state;
+            data_o : out type_state
+        );
+    end component;
+
+    component mixcolumns is
+        port (
+            data_i : in type_state;
+            enable : in std_logic;
+            data_o : out type_state);
+    end component;
+
+    component registre is
+        port (
+            clock_i : in std_logic;
+            resetb_i : in std_logic;
+            d_i : in type_state;
+            q_o : out type_state
+        );
+    end component;
+    -- dans l'ordre signaux : conversion du texte clair en type_state, input de addroundkey, conversion de la clé en type_state
+    -- signal de sortie du système
+    signal text_state_s, inputARK_s, currentkeystate_s, outputARK_s, data_s : type_state;
+    -- entree du registre, sortie du registre
+    signal reg_i_s, reg_o_s : type_state;
+    -- sortie de subbox, shiftrows et mixcolumns
+    signal subbox_o_s, shiftrows_o_s, mixcol_o_s : type_state;
+
+begin
+
+    --conversion
+    G1 : for col in 0 to 3 generate
+        G2 : for row in 0 to 3 generate
+            text_state_s(row)(col) <= text_i(127 - 32 * col - 8 * row downto 120 - 32 * col - 8 * row);
+            currentkeystate_s(row)(col) <= currentkey_i(127 - 32 * col - 8 * row downto 120 - 32 * col - 8 * row);
+        end generate;
+    end generate;
+
+    --entree de addroundkey
+    inputARK_s <= text_state_s when enable_Roundcomputing_i = '0' else
+        mixcol_o_s;
+
+    ARK : invaddroundkey port map(data_i => inputARK_s, key_i => currentkeystate_s, data_o => outputARK_s);
+    reg_i_s <= outputARK_s;
+    --sauvegarde de ark_o
+    reg : registre port map(clk_i => clk_i, reset_i => reset_i, d_i => reg_i_s, q_o => reg_o_s);
+    data_s <= reg_o_s;-- pas utile mais mieux pour ma compréhension
+    --calculs sur le resultat
+    SB : invsubbyte port map(data_i => data_s, data_o => subbox_o_s);
+    SR : shiftrows port map(data_i => subbox_o_s, data_o => shiftrows_o_s);
+    MC : mixColumns port map(data_i => shiftrows_o_s, enable => enable_mixcolumns_i, data_o => mixcol_o_s);
+
+    -- conversion finale
+    G3 : for col in 0 to 3 generate
+        G4 : for row in 0 to 3 generate
+            data_o(127 - 32 * col - 8 * row downto 120 - 32 * col - 8 * row) <= data_s(row)(col);
+        end generate;
+    end generate;
+
+end architecture;
+
+
+configuration invaes_round_conf of invaes_round is
+    for invaes_round_arch
+        for ARK : invaddroundkey
+            use entity Lib_rtl.invaddroundkey(invaddroundkey_arch);
+        end for;
+        for SB : invsubbyte
+            use configuration Lib_rtl.invsubbyte_conf;
+        end for;
+        for SR : invshiftrows
+            use entity Lib_rtl.invshiftrows(invshiftrows_arch);
+        end for;
+        for MC : invmixcolumns
+            use configuration Lib_rtl.invmixcolumns_conf;
+        end for;
+        for reg : registre
+            use entity Lib_rtl.registre(registre_arch);
+        end for;
+    end for;
+end configuration invaes_round_conf;

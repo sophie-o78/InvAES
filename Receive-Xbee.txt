@@ -1,0 +1,22 @@
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	
+	if(huart->Instance == USART1){
+		if ((XBEE[0] != 0) && (XBEE[1] == 0) && (XBEE[2] == 0))
+		{
+			robot1[0] = XBEE[0];
+			adresse_recu = 1;
+		}
+		if ((XBEE[0] == 0xFFFF) && (XBEE[1] == 0xFFFF) && (XBEE[2] == 0xFFFF))
+		{
+			reception_demande_adresse = 1;
+		}
+		if ((XBEE[0] != 0) && ((XBEE[1] != 0) || (XBEE[2] != 0)))
+		{
+			robot1[0] = XBEE[0];
+			robot1[1] = XBEE[1];
+			robot1[2] = XBEE[2];
+			adresse_et_position_recue = 1;
+		}
+		HAL_UART_Receive_IT(&huart1, &XBEE, 6);
+	}
+}

@@ -1,0 +1,12 @@
+library LIB_RTL;
+
+configuration FSM_AES_tb_conf of FSM_AES_tb is
+    for FSM_AES_tb_arch
+        for DUT : FSM_AES
+            use entity lib_rtl.FSM_AES(FSM_AES_arch);
+        end for;
+        for cpt : Compteur
+            use entity lib_rtl.Compteur(Compteur_arch);
+        end for;
+    end for;
+end configuration FSM_AES_tb_conf;

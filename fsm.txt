@@ -1,0 +1,81 @@
+library ieee;
+use ieee.std_logic_1164.all;
+library LIB_AES;
+use LIB_AES.crypt_pack.all;
+library LIB_RTL;
+
+entity FSM_AES is
+    port (
+        clock_i : in std_logic;
+        start_i : in std_logic;
+        resetb_i : in std_logic;
+        compteur_i : in bit4;
+        enable_round_computing_o : out std_logic;
+        enable_MC_o : out std_logic;
+        start_cpt_o : out std_logic;
+        init_cpt_o : out std_logic;
+        aes_on_o : out std_logic;
+        enable_output_o : out std_logic
+    );
+end FSM_AES;
+
+architecture FSM_AES_arch of FSM_AES is
+
+    signal enable_round_computing_s, enable_MC_s, start_cpt_s, init_cpt_s, aes_on_s, enable_output_s
+    : std_logic := '0';
+    signal started : std_logic := '0';
+begin
+    seq_0 : process (clock_i, resetb_i)
+    begin -- process seq_0
+        if resetb_i = '0' then
+            enable_round_computing_s <= '0';
+            enable_MC_s <= '0';
+            start_cpt_s <= '0';
+            init_cpt_s <= '1';
+            aes_on_s <= '0';
+            enable_output_s <= '0';
+            started<='0';
+        elsif clock_i ' event and clock_i = '1' then
+            if start_i = '0' and aes_on_s = '0' then
+                start_cpt_s <= '1';
+                init_cpt_s <= '1';
+                enable_MC_s <= '0';
+                enable_round_computing_s <= '0';
+                aes_on_s <= '0';
+                enable_output_s <= '0';
+            elsif start_i = '1' then
+                start_cpt_s <= '1';
+                init_cpt_s <= '0';
+                aes_on_s <= '1';
+                enable_round_computing_s <= '0';
+            end if;
+            if started = '1' then
+                enable_round_computing_s <= '1';
+                enable_MC_s <= '1';
+            end if;
+            if start_cpt_s = '1' then
+                if compteur_i = "0000" and started = '0' then
+                    enable_round_computing_s <= '0';
+                    enable_MC_s <= '1';
+                    started <= '1';
+                elsif compteur_i = "0001" then
+                    enable_round_computing_s <= '1';
+                    started<='0';
+                elsif compteur_i = "1001" then
+                    enable_round_computing_s <= '1';
+                    enable_MC_s <= '0';
+                    enable_output_s <= '1';
+                    aes_on_s <= '0';
+                end if;
+            end if;
+        end if;
+    end process seq_0;
+
+    enable_round_computing_o <= enable_round_computing_s;
+    enable_MC_o <= enable_MC_s;
+    start_cpt_o <= start_cpt_s;
+    init_cpt_o <= init_cpt_s;
+    aes_on_o <= aes_on_s;
+    enable_output_o <= enable_output_s;
+
+end architecture; -- arch

@@ -1,0 +1,131 @@
+--library  declaration
+library ieee;
+use ieee.std_logic_1164.all;
+library LIB_AES;
+use LIB_AES.crypt_pack.all;
+library LIB_RTL;
+
+
+--entity
+entity aes is
+    port (
+        text_i : in bit128;
+        clock_i : in std_logic;
+        resetb_i : in std_logic;
+        start_i : in std_logic;
+        cipher_o : out bit128;
+        aes_on_o : out std_logic
+    );
+end entity aes;
+
+--arch
+architecture aes_arch of AES is
+    component keyexpansion_I_O_table is
+        port (
+            round_i : in bit4;
+            expansion_key_o : out bit128
+        );
+    end component;
+    component FSM_AES is
+        port (
+            clock_i : in std_logic;
+            start_i : in std_logic;
+            resetb_i : in std_logic;
+            compteur_i : in bit4;
+            enable_round_computing_o : out std_logic;
+            enable_MC_o : out std_logic;
+            start_cpt_o : out std_logic;
+            init_cpt_o : out std_logic;
+            aes_on_o : out std_logic;
+            enable_output_o : out std_logic
+        );
+    end component;
+    component AESRound is
+        port (
+            clock_i : in std_logic;
+            currentkey_i : in bit128;
+            enable_mixcolumns_i : in std_logic;
+            enable_Roundcomputing_i : in std_logic;
+            resetb_i : in std_logic;
+            text_i : in bit128;
+            data_o : out bit128
+        );
+    end component;
+    component Compteur is
+        port (
+            clock_i : in std_logic;
+            reset_i : in std_logic;
+            enable_i : in std_logic;
+            init_i : in std_logic;
+            compteur_o : out bit4
+        );
+    end component;
+    signal compteur_s : bit4;
+    signal expansion_key_s : bit128;
+    signal enable_round_computing_s, enable_MC_s, start_cpt_s, init_cpt_s, aes_on_s, enable_output_s : std_logic;
+    signal aes_o : bit128;
+begin
+
+    key_exp : keyexpansion_I_O_table
+    port map(
+        round_i => compteur_s,
+        expansion_key_o => expansion_key_s
+    );
+
+    fsm : FSM_AES
+    port map(
+        clock_i => clock_i,
+        start_i => start_i,
+        resetb_i => resetb_i,
+        compteur_i => compteur_s,
+        enable_round_computing_o => enable_round_computing_s,
+        enable_MC_o => enable_MC_s,
+        start_cpt_o => start_cpt_s,
+        init_cpt_o => init_cpt_s,
+        aes_on_o => aes_on_s,
+        enable_output_o => enable_output_s
+    );
+
+    round : AESRound
+    port map(
+        clock_i => clock_i,
+        currentkey_i => expansion_key_s,
+        enable_mixcolumns_i => enable_MC_s,
+        enable_Roundcomputing_i => enable_round_computing_s,
+        resetb_i => resetb_i,
+        text_i => text_i,
+        data_o => aes_o
+    );
+
+    cpt : Compteur
+    port map(
+        clock_i => clock_i,
+        reset_i => resetb_i,
+        enable_i => start_cpt_s,
+        init_i => init_cpt_s,
+        compteur_o => compteur_s
+    );
+
+    aes_on_o <= aes_on_s;
+    cipher_o <= aes_o when enable_output_s = '1'
+        else
+        (others => '0');
+
+end architecture aes_arch;
+
+configuration AES_conf of AES is
+    for aes_arch
+        for key_exp : keyexpansion_I_O_table
+            use entity lib_aes.keyexpansion_I_O_table(keyexpansion_I_O_table_arch);
+        end for;
+        for fsm : FSM_AES
+            use entity Lib_rtl.fsm_aes(fsm_aes_arch);
+        end for;
+        for round : AESRound
+            use configuration lib_rtl.AESRound_conf;
+        end for;
+        for cpt : Compteur
+            use entity lib_rtl.Compteur(Compteur_arch);
+        end for;
+    end for;
+end configuration AES_conf;

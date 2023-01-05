@@ -1,0 +1,36 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+library LIB_AES;
+use LIB_AES.crypt_pack.all;
+library LIB_RTL;
+
+entity addRoundKey_tb is
+end addRoundKey_tb;
+
+architecture addRoundKey_tb_arch of addRoundKey_tb is
+    component addRoundKey
+        port (
+            data_i : in type_state;
+            key_i : in type_state;
+            data_o : out type_state
+        );
+    end component;
+    signal init_key_s : bit128 := X"2b7e151628aed2a6abf7158809cf4f3c"; -- test value
+    signal init_data_i_s : bit128 := X"526573746f20656e2076696c6c65203f"; -- test value
+    signal key_i_s, data_i_s, data_o_s : type_state;
+begin
+    DUT : addRoundKey
+    port map(
+        key_i => key_i_s,
+        data_i => data_i_s,
+        data_o => data_o_s
+    );
+    -- key and data_i conversion, bit128 to typeState
+    G1 : for col in 0 to 3 generate
+        G2 : for row in 0 to 3 generate
+            key_i_s(row)(col) <= init_key_s(127 - 32 * col - 8 * row downto 120 - 32 * col - 8 * row);
+            data_i_s(row)(col) <= init_data_i_s(127 - 32 * col - 8 * row downto 120 - 32 * col - 8 * row);
+        end generate;
+    end generate;
+end architecture addRoundKey_tb_arch; -- arch

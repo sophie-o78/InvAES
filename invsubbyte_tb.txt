@@ -1,0 +1,28 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+library LIB_AES;
+use LIB_AES.crypt_pack.all;
+library LIB_RTL;
+
+entity subByte_tb is
+end subByte_tb;
+
+architecture subByte_tb_arch of subByte_tb is
+    component subByte
+        port (
+            data_i : in type_state;
+            data_o : out type_state
+        );
+    end component;
+    signal data_i_s, data_o_s : type_state;
+begin
+    DUT : subByte
+    port map(
+        data_i => data_i_s,
+        data_o => data_o_s
+    );
+    data_i_s(0)(0) <= X"00", X"01" after 50 ns;--short test
+    data_i_s(3)(3) <= X"05", X"06" after 50 ns;--short test
+
+end architecture subByte_tb_arch; -- arch

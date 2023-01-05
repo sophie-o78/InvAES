@@ -1,0 +1,9 @@
+library LIB_RTL;
+
+configuration subByte_tb_conf_1 of subByte_tb is
+	for subByte_tb_arch
+		for DUT : subByte
+			use configuration LIB_RTL.subByte_conf;
+		end for;
+	end for;
+end subByte_tb_conf_1;

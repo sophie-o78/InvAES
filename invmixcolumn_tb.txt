@@ -1,0 +1,29 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+library LIB_AES;
+use LIB_AES.crypt_pack.all;-------
+library LIB_RTL;
+
+entity invmixcolumn_tb is
+end invmixcolumn_tb;
+
+architecture invmixcolumn_tb_arch of invmixcolumn_tb is
+    component invmixcolumn
+        port (
+            data_i : in column_state;
+            data_o : out column_state
+        );
+    end component;
+    signal data_i_s, data_o_s : column_state;
+begin
+    DUT : invmixcolumn
+    port map(
+        data_i => data_i_s,
+        data_o => data_o_s
+    );
+    data_i_s(0) <= X"16";--test signal, right result : 29 8E 6D E0
+    data_i_s(1) <= X"91";
+    data_i_s(2) <= X"06";
+    data_i_s(3) <= X"ab";
+end architecture invmixcolumn_tb_arch; 

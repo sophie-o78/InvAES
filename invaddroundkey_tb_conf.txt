@@ -1,0 +1,9 @@
+library LIB_RTL;
+
+configuration addRoundKey_tb_conf_1 of addRoundKey_tb is
+	for addRoundKey_tb_arch
+		for DUT : addRoundKey
+			use entity lib_rtl.addRoundKey(addRoundKey_arch);
+		end for;
+	end for;
+end addRoundKey_tb_conf_1;

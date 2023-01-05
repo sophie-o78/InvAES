@@ -1,0 +1,74 @@
+entity fsm_invaes is
+	port (
+		reset_i : in_std_logic;
+		start_i : in std_logic;
+		clk_i : in std_logic;
+		compteur_i : in bit8; --ou bit4 
+		enable_round_o : out std_logic;
+		init_compteur_o : out std_logic;
+		start_compteur_o : out std_logic;
+		enable_output_o : out std_logic; ---
+		inv_aes_enable_o : out std_logic
+	);
+end fsm_invaes;
+
+architecture fsm_invaes_arch of fsm_invaes is
+
+	signal enable_round_s, start_compteur_s, init_compteur_s, aes_enable_s, enable_output_s
+	: std_logic := '0';
+	signal started : std_logic := '0';
+begin
+    sequence : process (clk_i, reset_i)
+    begin
+        if resetb_i = '0' then
+            enable_round_computing_s <= '0';
+            enable_MC_s <= '0';
+            start_cpt_s <= '0';
+            init_cpt_s <= '1';
+            aes_on_s <= '0';
+            enable_output_s <= '0';
+            started<='0';
+        elsif clock_i ' event and clock_i = '1' then
+            if start_i = '0' and aes_on_s = '0' then
+                start_cpt_s <= '1';
+                init_cpt_s <= '1';
+                enable_MC_s <= '0';
+                enable_round_computing_s <= '0';
+                aes_on_s <= '0';
+                enable_output_s <= '0';
+            elsif start_i = '1' then
+                start_cpt_s <= '1';
+                init_cpt_s <= '0';
+                aes_on_s <= '1';
+                enable_round_computing_s <= '0';
+            end if;
+            if started = '1' then
+                enable_round_computing_s <= '1';
+                enable_MC_s <= '1';
+            end if;
+            if start_cpt_s = '1' then
+                if compteur_i = "0000" and started = '0' then
+                    enable_round_computing_s <= '0';
+                    enable_MC_s <= '1';
+                    started <= '1';
+                elsif compteur_i = "0001" then
+                    enable_round_computing_s <= '1';
+                    started<='0';
+                elsif compteur_i = "1001" then
+                    enable_round_computing_s <= '1';
+                    enable_MC_s <= '0';
+                    enable_output_s <= '1';
+                    aes_on_s <= '0';
+                end if;
+            end if;
+        end if;
+    end process sequence;
+
+    enable_round_computing_o <= enable_round_computing_s;
+    enable_MC_o <= enable_MC_s;
+    start_cpt_o <= start_cpt_s;
+    init_cpt_o <= init_cpt_s;
+    aes_on_o <= aes_on_s;
+    enable_output_o <= enable_output_s;
+
+end architecture;

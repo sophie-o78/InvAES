@@ -1,0 +1,64 @@
+library ieee;
+use ieee.std_logic_1164.all;
+library LIB_AES;
+use LIB_AES.crypt_pack.all;
+library LIB_RTL;
+
+entity invmixcolumn is
+    port (
+        data_i : in column_state;
+        data_o : out column_state
+    );
+end invmixcolumn;
+
+--arch
+architecture invmixcolumn_arch of invmixcolumn is
+
+    signal Byte0, Byte0_2, Byte0_3 : bit8;--normal, *2, *3
+    signal Byte1, Byte1_2, Byte1_3 : bit8;
+    signal Byte2, Byte2_2, Byte2_3 : bit8;
+    signal Byte3, Byte3_2, Byte3_3 : bit8;
+
+begin
+    --Byte0
+    Byte0 <= data_i(0);--normal
+    Byte0_2 <= ((data_i(0)(6 downto 0) & '0') xor x"1B") when data_i(0)(7) = '1'
+        else
+        (data_i(0)(6 downto 0) & '0');--byte0 * 2
+    Byte0_3 <= data_i(0) xor ((data_i(0)(6 downto 0) & '0') xor x"1B") when data_i(0)(7) = '1'
+        else
+        data_i(0) xor (data_i(0)(6 downto 0) & '0');-- byte 0 * 3
+
+    --Byte1
+    Byte1 <= data_i(1);
+    Byte1_2 <= ((data_i(1)(6 downto 0) & '0') xor x"1B") when data_i(1)(7) = '1'
+        else
+        (data_i(1)(6 downto 0) & '0');
+    Byte1_3 <= data_i(1) xor ((data_i(1)(6 downto 0) & '0') xor x"1B") when data_i(1)(7) = '1'
+        else
+        data_i(1) xor (data_i(1)(6 downto 0) & '0');
+
+    --Byte2
+    Byte2 <= data_i(2);
+    Byte2_2 <= ((data_i(2)(6 downto 0) & '0') xor x"1B") when data_i(2)(7) = '1'
+        else
+        (data_i(2)(6 downto 0) & '0');
+    Byte2_3 <= data_i(2) xor ((data_i(2)(6 downto 0) & '0') xor x"1B") when data_i(2)(7) = '1'
+        else
+        data_i(2) xor (data_i(2)(6 downto 0) & '0');
+
+    --Byte3
+    Byte3 <= data_i(3);
+    Byte3_2 <= ((data_i(3)(6 downto 0) & '0') xor x"1B") when data_i(3)(7) = '1'
+        else
+        (data_i(3)(6 downto 0) & '0');
+    Byte3_3 <= data_i(3) xor ((data_i(3)(6 downto 0) & '0') xor x"1B") when data_i(3)(7) = '1'
+        else
+        data_i(3) xor (data_i(3)(6 downto 0) & '0');
+
+    --output
+    data_o(0) <= Byte0_2 xor Byte1_3 xor Byte2 xor Byte3; --element s'[0,0]
+    data_o(1) <= Byte0 xor Byte1_2 xor Byte2_3 xor Byte3; --element s'[1,0]
+    data_o(2) <= Byte0 xor Byte1 xor Byte2_2 xor Byte3_3; --element s'[2,0]
+    data_o(3) <= Byte0_3 xor Byte1 xor Byte2 xor Byte3_2; --element s'[3,0]
+end architecture; -- arch

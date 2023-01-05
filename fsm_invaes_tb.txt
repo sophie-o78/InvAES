@@ -1,0 +1,71 @@
+library ieee;
+use ieee.std_logic_1164.all;
+library LIB_AES;
+use LIB_AES.crypt_pack.all;
+library LIB_RTL;
+
+entity FSM_AES_tb is
+end entity FSM_AES_tb;
+
+architecture FSM_AES_tb_arch of FSM_AES_tb is
+    component FSM_AES is
+        port (
+            clock_i : in std_logic;
+            start_i : in std_logic;
+            resetb_i : in std_logic;
+            compteur_i : in bit4;
+            enable_round_computing_o : out std_logic;
+            enable_MC_o : out std_logic;
+            start_cpt_o : out std_logic;
+            init_cpt_o : out std_logic;
+            aes_on_o : out std_logic;
+            enable_output_o : out std_logic
+        );
+    end component;
+    component Compteur is
+        port (
+            clock_i : in std_logic;
+            reset_i : in std_logic;
+            enable_i : in std_logic;
+            init_i : in std_logic;
+            compteur_o : out bit4
+        );
+    end component;
+
+    signal enable_s, init_s : std_logic;
+    signal reset_s : std_logic := '1';
+    signal clock_s : std_logic := '0';
+    signal start_s : std_logic;
+    signal compteur_s : bit4;
+    signal enable_round_computing_s, enable_MC_s, start_cpt_s, init_cpt_s, aes_on_s, enable_output_s : std_logic;
+
+begin
+
+    DUT : FSM_AES
+    port map(
+        clock_i => clock_s,
+        start_i => start_s,
+        resetb_i => reset_s,
+        compteur_i => compteur_s,
+        enable_round_computing_o => enable_round_computing_s,
+        enable_MC_o => enable_MC_s,
+        start_cpt_o => start_cpt_s,
+        init_cpt_o => init_cpt_s,
+        aes_on_o => aes_on_s,
+        enable_output_o => enable_output_s
+    );
+
+    cpt : Compteur
+    port map(
+        clock_i => clock_s,
+        reset_i => reset_s,
+        enable_i => start_cpt_s,
+        init_i => init_cpt_s,
+        compteur_o => compteur_s
+    );
+
+    clock_s <= not(clock_s) after 50 ns;
+    reset_s <= '1';
+    start_s <= '0', '1' after 120 ns, '0' after 180 ns;
+
+end architecture FSM_AES_tb_arch;

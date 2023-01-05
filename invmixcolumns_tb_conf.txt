@@ -1,0 +1,9 @@
+library LIB_RTL;
+
+configuration invmixcolumns_tb_conf_1 of invmixcolumns_tb is
+	for invmixcolumns_tb_arch
+		for DUT : invmixcolumns
+			use configuration lib_rtl.invmixcolumns_conf;
+		end for;
+	end for;
+end invmixcolumns_tb_conf_1;

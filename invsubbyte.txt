@@ -1,0 +1,44 @@
+library ieee;
+use ieee.std_logic_1164.all;
+library LIB_AES;
+use LIB_AES.crypt_pack.all;
+library LIB_RTL;
+
+--entity
+entity invsubbyte is
+	port (
+		data_i : in type_state;
+		data_o : out type_state
+);
+end invsubbyte;
+
+architecture invsubbyte_arch of subbyte is
+	component sBox
+		port (
+			data_i : in bit8; --bit8 : std_logic_vector of 8 bits
+			data_o : out bit8
+		);
+	end component;
+
+-- on va utiliser 16 invsbox pour obtenir le type_state de dimension 16 
+begin 
+	Ensemble_invsbox : for k in 0 to 15 generate
+	invsbox_n : invsbox ----------------------------
+	port map
+	(
+      --inputs map
+		data_i => data_i(k/4)(k mod 4),
+		data_o => data_o(k/4)(k mod 4)
+    );
+  end generate Ensemble_invsbox;
+end architecture;
+
+configuration invsubbyte_conf of invsubbyte is
+  for invsubbyte_arch
+    for Ensemble_invsbox
+      for invsbox_n : sbox
+        use entity Lib_rtl.invsbox(invsbox_arch); ---------------
+      end for;
+    end for;
+  end for;
+end configuration invsubbyte_conf;

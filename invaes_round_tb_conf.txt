@@ -1,0 +1,9 @@
+library LIB_RTL;
+
+configuration invaes_round_tb_conf_1 of invaes_round_tb is
+	for invaes_round_tb_arch
+		for DUT : invaes_round
+			use entity lib_rtl.invaes_round(invaes_round_arch);
+		end for;
+	end for;
+end invaes_round_tb_conf_1;

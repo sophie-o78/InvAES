@@ -1,0 +1,68 @@
+#!/bin/bash
+
+export PROJECTNAME="."
+
+# TO DO : test $PROJECTNAME
+echo "the project location is : $PROJECTNAME"
+echo "removing libs : folder plus line declaration in Modelsim.ini file"
+vdel -lib $PROJECTNAME/LIB/LIB_AES -all
+vdel -lib $PROJECTNAME/LIB/LIB_RTL -all
+vdel -lib $PROJECTNAME/LIB/LIB_BENCH -all
+
+echo "creating VHDL LIBRARY"
+vlib $PROJECTNAME/LIB/LIB_AES
+vmap LIB_AES $PROJECTNAME/LIB/LIB_AES
+vlib $PROJECTNAME/LIB/LIB_RTL
+vmap LIB_RTL $PROJECTNAME/LIB/LIB_RTL
+vlib $PROJECTNAME/LIB/LIB_BENCH
+vmap LIB_BENCH $PROJECTNAME/LIB/LIB_BENCH
+
+echo "compile third party library  : type definition package"
+vcom -work LIB_AES $PROJECTNAME/SRC/THIRDPARTY/CryptPack.vhd
+vcom -work LIB_AES $PROJECTNAME/SRC/THIRDPARTY/KeyExpansion_I_O_table.vhd
+
+echo "compile vhdl sources"
+vcom -work LIB_RTL $PROJECTNAME/SRC/RTL/sBox.vhd
+vcom -work LIB_RTL $PROJECTNAME/SRC/RTL/subByte.vhd
+vcom -work LIB_RTL $PROJECTNAME/SRC/RTL/shiftRows.vhd
+vcom -work LIB_RTL $PROJECTNAME/SRC/RTL/addRoundKey.vhd
+vcom -work LIB_RTL $PROJECTNAME/SRC/RTL/mixColumn.vhd
+vcom -work LIB_RTL $PROJECTNAME/SRC/RTL/mixColumns.vhd
+
+
+echo "compile vhdl test bench"
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/sBox_tb.vhd
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/subByte_tb.vhd
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/shiftRows_tb.vhd
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/addRoundKey_tb.vhd
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/mixColumn_tb.vhd
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/mixColumns_tb.vhd
+
+echo "compile vhdl test bench conf"
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/sBox_tb_conf.vhd
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/subByte_tb_conf.vhd
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/shiftRows_tb_conf.vhd
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/addRoundKey_tb_conf.vhd
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/mixColumn_tb_conf.vhd
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/mixColumns_tb_conf.vhd
+
+vcom -work LIB_RTL $PROJECTNAME/SRC/RTL/registre.vhd
+vcom -work LIB_RTL $PROJECTNAME/SRC/RTL/AESRound.vhd
+vcom -work LIB_RTL $PROJECTNAME/SRC/RTL/Compteur.vhd
+vcom -work LIB_RTL $PROJECTNAME/SRC/RTL/FSM_AES.vhd
+
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/AESRound_tb.vhd
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/FSM_AES_tb.vhd
+
+vcom -work LIB_BENCH $PROJECTNAME/SRC/BENCH/AESRound_tb_conf.vhd
+
+
+vcom -work LIB_RTL $PROJECTNAME/SRC/RTL/AES.vhd
+
+
+echo "compilation finished"
+echo "start simulation..."
+#vsim  LIB_BENCH.sbox_tb_conf &
+
+
+

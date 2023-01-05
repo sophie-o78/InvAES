@@ -1,0 +1,67 @@
+//dans les declarations
+
+uint32_t mesures_sonar[8]; ///////////////////stocker valeurs de 8 mesures
+uint8_t nb_mes_sonar;   ////////////compte jusqu'à 8
+//entre les balises
+
+void MesureSonar() {
+		int EnCoursAcquisition = 3; // 3 acquisitions, x = 3 , y =2, z=1
+		int PlacementSonar = 3; // lancer la mesure que lorsque le sonar est bien placé et allumé
+		Tech = 0;
+		while(EnCoursAcquisition == 3)//acquisition sur x
+		{	Sonar_angle_0();//placement de l'angle du sonar
+			if (Tech >= T_200_MS*20) {
+				Tech = 0;//temps d'attente
+				allumerSonar();
+				PlacementSonar = 2;//le sonar est allumé on peut prendre la mesure
+			}
+			if (Tech >= T_200_MS && PlacementSonar == 2) {
+							if (nb_mes_sonar<8){ //////////////////////////////modif
+								mesures_sonar[nb_mes_sonar] = tic_sonar; /////////////modif
+								nb_mes_sonar++;
+
+
+							}
+							else
+							{
+								nb_mes_sonar = 0;
+								Dist_X = moyenne_mesures(mesures_sonar, 8); /////////////////modif
+							}
+							Dist_X = tic_sonar/100;//on récupère la mesure
+							EnCoursAcquisition = 2;//on passe à la mesure de y
+							Tech = 0;
+		}
+		}
+
+//avant parkAssist
+
+uint32_t moyenne_mesures(uint32_t*t, uint8_t size)
+{
+	uint32_t result = 0;
+	for(uint8_t i = 0; i<size; i++)
+	{
+		result+=t[i];
+	}
+
+	return result/size;
+}
+
+
+//dans parkAssist
+
+case ROTATION_X :
+		{
+			debut_rotation = __HAL_TIM_GET_COUNTER(&htim3);
+			_DirG = AVANCE;
+			_DirD = RECULE;
+			_CVitG = V1;
+			_CVitD = V1;
+
+			fin_rotation = __HAL_TIM_GET_COUNTER(&htim3);
+			if(abs(fin_rotation - debut_rotation) >= 280)
+			{
+				etape = AVANCER_SUR_Y;
+				Tech= 0;
+			}
+			break;
+		}

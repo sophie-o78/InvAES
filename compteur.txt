@@ -1,0 +1,45 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+library LIB_AES;
+use LIB_AES.crypt_pack.all;
+library LIB_RTL;
+
+--entity
+entity Compteur is
+  port (
+    clock_i : in std_logic;
+    reset_i : in std_logic;
+    enable_i : in std_logic;
+    init_i : in std_logic;
+    compteur_o : out bit4
+  );
+end Compteur;
+
+--arch
+architecture Compteur_arch of Compteur is
+
+  signal counter_s : integer range 0 to 11;
+
+begin
+
+  seq_0 : process (clock_i, reset_i, enable_i, init_i) is
+  begin -- process seq_0
+    if reset_i = '0' then -- asynchronous reset (active-low)
+      counter_s <= 0;
+    elsif clock_i'event and clock_i = '1' then -- rising clock
+      if (enable_i = '1') then
+        if (init_i = '1') then
+          counter_s <= 0;
+        else
+          counter_s <= counter_s + 1;
+        end if;
+      end if;
+    else
+      counter_s <= counter_s;
+    end if;
+  end process seq_0;
+
+  compteur_o <= std_logic_vector(to_unsigned(counter_s,4));
+
+end architecture; -- arch
